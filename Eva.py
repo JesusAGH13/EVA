@@ -6,6 +6,7 @@ import wikipedia
 import os
 import subprocess as sub
 from dictionaries import sites, files, programs
+import requests
 
 name = 'Eva'
 listenner = sr.Recognizer()
@@ -43,7 +44,7 @@ def playYT(rec):
     pywhatkit.playonyt(video)
 
 
-def buscaWiki(rec):
+def searchWiki(rec):
     search = rec.replace('busca', '')
     wikipedia.set_lang('es')
     wiki = wikipedia.summary(search, 1)
@@ -51,7 +52,7 @@ def buscaWiki(rec):
     talk(wiki)
 
 
-def abrirSitio(rec):
+def openSite(rec):
     for site in sites:
         if site in rec:
             sub.call(
@@ -59,18 +60,33 @@ def abrirSitio(rec):
             talk(f'Abriendo {site}')
 
 
-def abrirArchivo(rec):
+def openFile(rec):
     for file in files:
         if file in rec:
             sub.Popen([files[file]], shell=True)
             talk(f'Abriendo {file}')
 
 
-def abrirPrograma(rec):
+def openPrograma(rec):
     for app in programs:
         if app in rec:
             talk(f'Abriendo {app}')
             os.startfile(programs[app])
+
+
+def getWeather(rec):
+    city = rec.replace('clima', '')
+    url = f'https://es.wttr.in/{city}?format=j1'
+
+    response = requests.get(url)
+    weather_dic = response.json()
+
+    temp_c = weather_dic['current_condition'][0]['temp_C']
+    desc_temp = weather_dic['current_condition'][0]['lang_es']
+    desc_temp = desc_temp[0]['value']
+
+    talk(
+        f'La temperatura actual en {city} es de {temp_c} grados celsius {desc_temp}')
 
 
 def run():
@@ -84,12 +100,14 @@ def run():
         elif 'reproduce' in rec and 'youtube' in rec:
             playYT(rec)
         elif 'busca' in rec:
-            buscaWiki(rec)
+            searchWiki(rec)
         elif 'abre' in rec:
-            abrirSitio(rec)
-            abrirPrograma(rec)
+            openSite(rec)
+            openPrograma(rec)
         elif 'archivo' in rec:
-            abrirArchivo(rec)
+            openFile(rec)
+        elif 'clima' in rec:
+            getWeather(rec)
 
 
 if __name__ == '__main__':
